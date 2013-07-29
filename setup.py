@@ -14,6 +14,8 @@
 
 import os
 import random
+import re
+import urllib2
 from setuptools import setup, find_packages
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -23,13 +25,31 @@ try:
 except IOError:
     README = ''
 
+pkgre = re.compile('href="/pypi/([^/"]+)/')
+prefixes = [
+    'zope.',
+    'zc.',
+    'z3c.',
+# Uncomment following line to unleash Plone pain.
+#    'Products.'
+]
+
+def matches(name):
+    for prefix in prefixes:
+        if name.startswith(prefix):
+            return True
+    return False
+
+def get_zope_packages():
+    html = urllib2.urlopen('https://pypi.python.org/pypi/').read()
+    return [pkg.strip() for pkg in pkgre.findall(html) if matches(pkg)]
+
 random.seed()
-zope_packages = [p.strip() for p in
-                 open(os.path.join(here, 'zope_packages.txt'))]
+zope_packages = get_zope_packages()
 install_requires=[random.choice(zope_packages), random.choice(zope_packages)]
 
 setup(name='zope.cooties',
-      version='40.4',
+      version='40.5',
       description=('Give the haters more to hate.'),
       long_description=README,
       classifiers=[
@@ -47,4 +67,3 @@ setup(name='zope.cooties',
       zip_safe=False,
       install_requires = install_requires,
       )
-
